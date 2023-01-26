@@ -1,0 +1,10 @@
+*.pyc
+__pychache__
+.DS_Store
+.ipynb_checkpoints
+*.egg-info
+dist/
+build/
+dev/
+results/
+*_case_files.zip
