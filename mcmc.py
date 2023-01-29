@@ -165,7 +165,7 @@ def mcmc_fit(target_name, params0):
     
     #::: set initial walker positions
     p0 = theta_0 + 1e-4 * np.random.randn(mcmc['nwalkers'], mcmc['ndim'])
-
+    
     #::: run (without multiprocessing for now)
     print("\nRoger that, Detective.") 
     print("Thanks for all the clues.")
