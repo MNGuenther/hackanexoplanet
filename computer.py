@@ -130,7 +130,7 @@ def check_initial_guess(target_name, radius_planet_init, radius_star_init, epoch
         
     #https://exoplanetarchive.ipac.caltech.edu/overview/TOI-560c
     elif target_name == 'TOI-560c':
-        if (np.abs(radius_planet_init-2.39) <= 2.) & (np.abs(radius_star_init-0.65) <= 0.2) & (np.abs(epoch_init-0.45) <= 0.02):
+        if (np.abs(radius_planet_init-2.39) <= 1.) & (np.abs(radius_star_init-0.65) <= 0.2) & (np.abs(epoch_init-0.45) <= 0.02):
             #to account for "time -= time[0]" above, we need to convert all epochs accordingly
             #thus, the correct epoch = (epoch - time[0])%period = (2459232.1682 - 2.459968016734779812e+06)%18.87974 = 0.46132522037691714
             return True

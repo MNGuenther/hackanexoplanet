@@ -22,9 +22,13 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, FixedLocator
 import os
 from IPython.display import FileLink
+from tabulate import tabulate
 
 #::: non-standard modules
 import emcee
+
+#::: local modules
+import latex_printer
 
 #::: globals (I know, I know, ...)
 data = {}
@@ -42,34 +46,38 @@ mcmc = {'nwalkers':50, #50
 ###############################################################################
 #::: MCMC output
 ###############################################################################
-def mcmc_output(target_name):
+def mcmc_output(target_name, params=None):
         
     reader = emcee.backends.HDFBackend( os.path.join('results',target_name,'mcmc_save.h5'), read_only=True )
 
-    #::: print something nice
-    samples = draw_mcmc_posterior_samples(reader, Nsamples=None, as_type='dic')
-    print('The investigation was successful.')
-    print('We nailed down exactly what happened.')
-
-    #::: plot histograms
-    fig1, axes1 = plot_MCMC_histograms(reader)
-    fig1.savefig( os.path.join('results',target_name,'mcmc_hist.pdf'), bbox_inches='tight' )
-    
-    #::: plot the chains
-    fig2, axes2 = plot_MCMC_chains(reader)
-    fig2.savefig( os.path.join('results',target_name,'mcmc_chains.jpg'), bbox_inches='tight' )
-
-    # #::: plot the corner
-    # fig = plot_MCMC_corner(reader)
-    # fig.savefig( os.path.join(config.BASEMENT.outdir,'mcmc_corner.pdf'), bbox_inches='tight' )
-    # plt.close(fig)
-    
     #::: return 20 samples for plotting
     posterior_samples = draw_mcmc_posterior_samples(reader, Nsamples=20, as_type='dic')
     
-    print('Have a look, we prepared you a case file with all the details:')
+    #::: print something nice
+    samples = draw_mcmc_posterior_samples(reader, Nsamples=None, as_type='dic')
+    #print("\nDetective, look at this!")
+    #print('The investigation was successful.')
+    #print('We nailed down exactly what happened.')
 
-    return posterior_samples, fig1, fig2
+    #::: plot histograms
+    fig_hist = plot_MCMC_histograms(reader)[0]
+    fig_hist.savefig( os.path.join('results',target_name,'histograms.pdf'), bbox_inches='tight' )
+    
+    #::: plot the chains
+    fig_chains = plot_MCMC_chains(reader)[0]
+    fig_chains.savefig( os.path.join('results',target_name,'chains.jpg'), bbox_inches='tight' )
+    plt.close(fig_chains) #close it, as it is only needed for internal bookkeeping
+
+    # #::: get the table
+    table = get_MCMC_table(reader, params=params)
+    table2 = get_MCMC_table(reader, params=params, tablefmt='pretty')
+    with open(os.path.join('results',target_name,'table.txt'), 'w') as f:
+        f.write(tabulate(table2, headers=['Name', 'Median', 'Lower Error', 'Upper Error', 'Case Note']))
+    
+    #print('We also found some old case files in the archive that gave us extra insights.')
+    #print('Have a look, we prepared you a case file with all the details:')
+
+    return posterior_samples, fig_hist, table
     
 
     
@@ -95,6 +103,23 @@ def draw_mcmc_posterior_samples(sampler, Nsamples=None, as_type='2d_array'):
             ind = np.where(np.array(fitkeys)==key)[0] #fitkeys must be a numpy array for this operation
             posterior_samples_dic[key] = posterior_samples[:,ind].flatten()
         return posterior_samples_dic
+
+
+    
+###############################################################################
+#::: compute the posterior values (median and uncertainties) from the MCMC save.5 (internally in the code)
+###############################################################################
+def compute_posterior_values(sampler):
+    samples = draw_mcmc_posterior_samples(sampler, Nsamples=None, as_type='dic')
+    
+    values = {}
+    for key in fitkeys:
+        values[key] = {}
+        values[key]['median'] = np.nanmedian(samples[key])
+        values[key]['lower_error'] = np.nanmedian(samples[key]) - np.nanpercentile(samples[key],16)
+        values[key]['upper_error'] = np.nanpercentile(samples[key],84) - np.nanmedian(samples[key])
+        
+    return values
 
 
     
@@ -138,13 +163,64 @@ def plot_MCMC_chains(sampler):
 def plot_MCMC_histograms(sampler):
     
     samples = draw_mcmc_posterior_samples(sampler, Nsamples=None, as_type='dic')
+    values = compute_posterior_values(sampler)
     
-    fig, axes = plt.subplots(1, mcmc['ndim'], figsize=(12,4))
+    fig, axes = plt.subplots(1, mcmc['ndim'], figsize=(12,4), tight_layout=True)
     for i, (key, label) in enumerate(zip(fitkeys, labels)):
         ax = axes[i]
-        ax.hist(samples[key])
-        ax.axvline(np.median(samples[key]), color='k', linestyle='--')
-        ax.set(title=label, ylabel='', yticklabels=[])
+        ax.hist(samples[key],bins=20,alpha=0.5)
+        ax.axvline(values[key]['median'], color='r', linestyle='-')
+        ax.axvline(values[key]['median']-values[key]['lower_error'], color='r', linestyle='--')
+        ax.axvline(values[key]['median']+values[key]['upper_error'], color='r', linestyle='--')
+        result_str = r'$'+latex_printer.round_tex(values[key]['median'], values[key]['lower_error'], values[key]['upper_error'])+'$'
+        ax.set(xlabel='Possible solutions', title=label+'\n'+result_str, ylabel='', yticklabels=[])
     axes[0].set(ylabel='Statistical evidence')
         
     return fig, axes
+    
+    
+    
+###############################################################################
+#::: return a pandas table
+###############################################################################
+def get_MCMC_table(sampler, params=None, tablefmt='html'):
+    
+    values = compute_posterior_values(sampler)
+    
+    table = {'name':[],
+             'median':[],
+             'lower_error':[],
+             'upper_error':[],
+             'comment':[]}
+    
+    for i, (key, label) in enumerate(zip(fitkeys, labels)):
+        s1, s2, s3 = latex_printer.round_txt_separately(values[key]['median'], values[key]['lower_error'], values[key]['upper_error'])
+        table['name'].append(label)
+        table['median'].append(s1)
+        table['lower_error'].append(s2)
+        table['upper_error'].append(s3)
+        table['comment'].append('This investigation')
+        
+    if params is not None and 'period' in params:
+        table['name'].append('Orbital period (days)')
+        table['median'].append(str(params['period']))
+        table['lower_error'].append('')
+        table['upper_error'].append('')
+        table['comment'].append('Old case files')    
+
+    if params is not None and 'a' in params:
+        table['name'].append('Orbital semi-major axis (AU)')
+        table['median'].append(str(params['a']))
+        table['lower_error'].append('')
+        table['upper_error'].append('')
+        table['comment'].append('Old case files')    
+
+    if params is not None and 'incl' in params:
+        table['name'].append('Orbital inclination (degree)')
+        table['median'].append(str(params['incl']))
+        table['lower_error'].append('')
+        table['upper_error'].append('')
+        table['comment'].append('Old case files')    
+    
+    # return pd.DataFrame(table)
+    return table

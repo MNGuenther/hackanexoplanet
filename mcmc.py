@@ -167,14 +167,13 @@ def mcmc_fit(target_name, params0):
     p0 = theta_0 + 1e-4 * np.random.randn(mcmc['nwalkers'], mcmc['ndim'])
     
     #::: run (without multiprocessing for now)
-    print("\nRoger that, Detective.") 
-    print("Thanks for all the clues.")
-    print("We are running a full investigation now...")
+    #print("\nRoger that, Detective.") 
+    #print("Thanks for all the clues.")
+    #print("We are running a full investigation now...")
     sampler = emcee.EnsembleSampler(mcmc['nwalkers'],
                                     mcmc['ndim'],
                                     mcmc_lnprob,
                                     backend=backend)
     sampler.run_mcmc(p0, mcmc['total_steps'], progress=True)
-    print("\nDetective, look at this!")
     
     
