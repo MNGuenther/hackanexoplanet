@@ -1,12 +1,10 @@
 name: env_hackanexoplanet
 channels:
+  - default
   - conda-forge
 dependencies:
-  - python
   - numpy
   - matplotlib
   - ipympl
-  - pip
-  - pip:
-    - emcee
-    - ellc
+  - emcee
+  - ellc
