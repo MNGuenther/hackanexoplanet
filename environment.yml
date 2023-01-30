@@ -1,0 +1,12 @@
+name: env_hackanexoplanet
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - matplotlib
+  - ipympl
+  - pip
+  - pip:
+    - emcee
+    - ellc
