@@ -35,7 +35,7 @@ data = {}
 params = {}
 bounds = []
 fitkeys = ['radius_planet', 'radius_star', 'epoch']
-labels = ['Radius of the planet (Earth radii)', 'Radius of the star (Solar radii)', 'Mid-transit time (days)']
+labels = ['Radius of the planet\n(in units of Earth radii)', 'Radius of the star\n(in units of Solar radii)', 'Mid-transit time\n(in units of days)']
 mcmc = {'nwalkers':50, #50
         'total_steps':400, #400
         'burn_steps':300, #300
@@ -60,7 +60,7 @@ def mcmc_output(target_name, params=None):
     #print('We nailed down exactly what happened.')
 
     #::: plot histograms
-    fig_hist = plot_MCMC_histograms(reader)[0]
+    fig_hist = plot_MCMC_histograms(reader, target_name=target_name)[0]
     fig_hist.savefig( os.path.join('results',target_name,'histograms.pdf'), bbox_inches='tight' )
     
     #::: plot the chains
@@ -69,12 +69,12 @@ def mcmc_output(target_name, params=None):
     plt.close(fig_chains) #close it, as it is only needed for internal bookkeeping
 
     # #::: get the table
-    table = get_MCMC_table(reader, params=params)
-    table2 = get_MCMC_table(reader, params=params, tablefmt='pretty')
+    table = get_MCMC_table(reader, params=params, target_name=target_name)
+    table2 = get_MCMC_table(reader, params=params, tablefmt='pretty', target_name=target_name)
     with open(os.path.join('results',target_name,'table.txt'), 'w') as f:
-        f.write(tabulate(table2, headers=['Name', 'Median', 'Lower Error', 'Upper Error', 'Case Note']))
+        f.write(tabulate(table2, headers=['Name', 'Median value', 'Lower error', 'Upper error', 'Case note', 'Target']))
     
-    #print('We also found some old case files in the archive that gave us extra insights.')
+    #print('We also found some other observations from the Archive that gave us extra insights.')
     #print('Have a look, we prepared you a case file with all the details:')
 
     return posterior_samples, fig_hist, table
@@ -154,18 +154,22 @@ def plot_MCMC_chains(sampler):
 
     plt.tight_layout()
     return fig, axes
-
+	
     
     
 ###############################################################################
 #::: plot the MCMC histograms (instead of the Corner plot)
 ###############################################################################
-def plot_MCMC_histograms(sampler):
+def plot_MCMC_histograms(sampler, target_name=None):
     
     samples = draw_mcmc_posterior_samples(sampler, Nsamples=None, as_type='dic')
     values = compute_posterior_values(sampler)
     
     fig, axes = plt.subplots(1, mcmc['ndim'], figsize=(12,4), tight_layout=True)
+    if target_name is None:
+        fig.suptitle('Histograms of the statistical probability of all parameter values')
+    else:
+        fig.suptitle('Histograms of the statistical probability of all parameter values of '+target_name)
     for i, (key, label) in enumerate(zip(fitkeys, labels)):
         ax = axes[i]
         ax.hist(samples[key],bins=20,alpha=0.5)
@@ -174,7 +178,7 @@ def plot_MCMC_histograms(sampler):
         ax.axvline(values[key]['median']+values[key]['upper_error'], color='r', linestyle='--')
         result_str = r'$'+latex_printer.round_tex(values[key]['median'], values[key]['lower_error'], values[key]['upper_error'])+'$'
         ax.set(xlabel='Possible solutions', title=label+'\n'+result_str, ylabel='', yticklabels=[])
-    axes[0].set(ylabel='Statistical evidence')
+    axes[0].set(ylabel='Statistical probability')
         
     return fig, axes
     
@@ -183,44 +187,63 @@ def plot_MCMC_histograms(sampler):
 ###############################################################################
 #::: return a pandas table
 ###############################################################################
-def get_MCMC_table(sampler, params=None, tablefmt='html'):
+def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
     
     values = compute_posterior_values(sampler)
     
-    table = {'name':[],
-             'median':[],
-             'lower_error':[],
-             'upper_error':[],
-             'comment':[]}
+    if target_name is None:
+        table = {'name':[],
+                 'median':[],
+                 'lower_error':[],
+                 'upper_error':[],
+                 'comment':[]}
     
+    else:
+        table = {'name':[],
+                 'median':[],
+                 'lower_error':[],
+                 'upper_error':[],
+                 'comment':[],
+                 'target':[]}
+
     for i, (key, label) in enumerate(zip(fitkeys, labels)):
         s1, s2, s3 = latex_printer.round_txt_separately(values[key]['median'], values[key]['lower_error'], values[key]['upper_error'])
         table['name'].append(label)
         table['median'].append(s1)
         table['lower_error'].append(s2)
         table['upper_error'].append(s3)
-        table['comment'].append('This investigation')
-        
+        table['comment'].append('Cheops observations')
+        if target_name:
+            table['target'].append(target_name)
+
     if params is not None and 'period' in params:
-        table['name'].append('Orbital period (days)')
+        table['name'].append('Orbital period (in units of days)')
         table['median'].append(str(params['period']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Old case files')    
+        table['comment'].append('Other observations from the Archive')
+        if target_name:
+            table['target'].append(target_name)  
 
+    '''
     if params is not None and 'a' in params:
-        table['name'].append('Orbital semi-major axis (AU)')
+        table['name'].append('Orbital semi-major axis (in units of AU)')
         table['median'].append(str(params['a']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Old case files')    
+        table['comment'].append('Other observations from the Archive')
+        if target_name:
+            table['target'].append(target_name) 
 
     if params is not None and 'incl' in params:
-        table['name'].append('Orbital inclination (degree)')
+        table['name'].append('Orbital inclination (in units of degree)')
         table['median'].append(str(params['incl']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Old case files')    
+        table['comment'].append('Other observations from the Archive')
+        if target_name:
+            table['target'].append(target_name)
+    '''
     
     # return pd.DataFrame(table)
     return table

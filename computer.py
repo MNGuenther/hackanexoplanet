@@ -8,7 +8,7 @@ import ellc
 #::: load data
 def load_data(target_name):
         
-    if target_name == 'Select a target...':
+    if target_name == 'Select an exoplanet...':
         return None
         
     elif target_name == 'WASP-189b':
@@ -39,7 +39,7 @@ def load_data(target_name):
 #::: load params
 def load_params(target_name):
     
-    if target_name == 'Select a target...':
+    if target_name == 'Select an exoplanet...':
         return None, None, None, None, None, None
     
     #https://exoplanetarchive.ipac.caltech.edu/overview/wasp-189
@@ -109,7 +109,7 @@ def calc_flux_model(radius_planet, radius_star, epoch, period, a, incl, time_mod
 #::: check if the initial guess is good enough to start the fit
 def check_initial_guess(target_name, radius_planet_init, radius_star_init, epoch_init):
     
-    if target_name == 'Select a target...':
+    if target_name == 'Select an exoplanet...':
         return False
     
     #https://exoplanetarchive.ipac.caltech.edu/overview/wasp-189
@@ -145,7 +145,7 @@ def check_initial_guess(target_name, radius_planet_init, radius_star_init, epoch
 #::: load the bounds        
 def load_bounds(target_name):
     
-    if target_name == 'Select a target...':
+    if target_name == 'Select an exoplanet...':
         return None
     
     #https://exoplanetarchive.ipac.caltech.edu/overview/wasp-189
