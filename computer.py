@@ -44,46 +44,46 @@ def load_params(target_name):
     
     #https://exoplanetarchive.ipac.caltech.edu/overview/wasp-189
     elif target_name == 'WASP-189b':
-        '''
-        radius_planet = 18.15 #Earth radii
-        radius_star = 2.36 #Solar radii
-        epoch = 8926.5416960 #BJD_TDB
-        period = 2.7240330 #days
-        a = 0.05053 #AU
-        incl = 84.03 #deg
-        '''
         radius_planet_init = 1. #Earth radii
         radius_star_init = 1. #Solar radii
         epoch_init = 0.3 #days since the first data time stamp (i.e. not the BJD_TDB)
-        period = 2.7240330 #days
+        period = 2.7240330 #days; from Stassun+17
         a = 0.05053 #AU -> Solar radii
         incl = 84.03 #deg  
+        q1 = 0.181
+        q2 = 0.472
     
+    #https://exoplanetarchive.ipac.caltech.edu/overview/kelt-3
     elif target_name == 'KELT-3b':
         radius_planet_init = 1. #Earth radii
         radius_star_init = 1. #Solar radii
         epoch_init = 0.3 #days since the first data time stamp (i.e. not the BJD_TDB)
-        period = 2.70339 #days
-        a = 0.04122 #AU -> Solar radii
-        incl = 84.14 #deg
+        period = 2.70339 #days; from Stassun+17
+        a = 0.0464 #AU -> Solar radii #allesfitter gave 0.0464; Stassun+17 reports 0.0476; Pepper+13 reports 0.04122
+        incl = 84.14 #deg; from Stassun+17
+        q1 = 0.55 #from allesfitter
+        q2 = 0.19 #from allesfitter
         
+    #https://exoplanetarchive.ipac.caltech.edu/overview/toi-560
     elif target_name == 'TOI-560c':
         radius_planet_init = 1. #Earth radii
         radius_star_init = 1. #Solar radii
         epoch_init = 0.3 #days since the first data time stamp (i.e. not the BJD_TDB)
-        period = 18.87974 #days
-        a = 0.1242 #AU -> Solar radii
-        incl = 89.72 #deg
+        period = 18.87974 #days; from Barragan+19
+        a = 0.1242 #AU -> Solar radii #allesfitter gave 0.1245; Barragan+19 reports 0.1242
+        incl = 89.72 #deg; from Barragan+19
+        q1 = 0.44 #from allesfitter
+        q2 = 0.48 #from allesfitter
 
     else:
         raise ValueError('Oh whoopsie. Something went wrong.')
     
-    return radius_planet_init, radius_star_init, epoch_init, period, a, incl
+    return radius_planet_init, radius_star_init, epoch_init, period, a, incl, q1, q2
 
 
 
 #::: call ellc to create light curves
-def calc_flux_model(radius_planet, radius_star, epoch, period, a, incl, time_model):
+def calc_flux_model(radius_planet, radius_star, epoch, period, a, incl, q1, q2, time_model):
     
     flux_model = ellc.fluxes(
                             t_obs =       time_model, 
@@ -93,8 +93,8 @@ def calc_flux_model(radius_planet, radius_star, epoch, period, a, incl, time_mod
                             incl =        incl, #in degree
                             t_zero =      epoch, #in days
                             period =      period, #in days
-                            ldc_1 =       0.5, #TODO
-                            ldc_2 =       0.5, #TODO
+                            ldc_1 =       q1,
+                            ldc_2 =       q2,
                             grid_1 =      'sparse',
                             grid_2 =      'sparse',
                             ld_1 =        'quad',

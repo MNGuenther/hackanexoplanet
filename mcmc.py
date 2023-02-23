@@ -64,7 +64,7 @@ def mcmc_lnlike(theta):
         return -np.inf
     
     #::: calculate the model; if there are any NaN, return -np.inf
-    model = computer.calc_flux_model(params['radius_planet'], params['radius_star'], params['epoch'], params['period'], params['a'], params['incl'], data['time'])
+    model = computer.calc_flux_model(params['radius_planet'], params['radius_star'], params['epoch'], params['period'], params['a'], params['incl'], params['q1'], params['q2'], data['time'])
     #TODO: not nice that this is also called model, rename it to sth better
     if any(np.isnan(model)) or any(np.isinf(model)): 
         return -np.inf

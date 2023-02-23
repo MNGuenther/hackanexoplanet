@@ -221,7 +221,7 @@ def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
         table['median'].append(str(params['period']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Other observations from the Archive')
+        table['comment'].append('Other observations from the archive')
         if target_name:
             table['target'].append(target_name)  
 
@@ -231,7 +231,7 @@ def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
         table['median'].append(str(params['a']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Other observations from the Archive')
+        table['comment'].append('Other observations from the archive')
         if target_name:
             table['target'].append(target_name) 
 
@@ -240,7 +240,7 @@ def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
         table['median'].append(str(params['incl']))
         table['lower_error'].append('')
         table['upper_error'].append('')
-        table['comment'].append('Other observations from the Archive')
+        table['comment'].append('Other observations from the archive')
         if target_name:
             table['target'].append(target_name)
     '''
