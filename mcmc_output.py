@@ -225,7 +225,6 @@ def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
         if target_name:
             table['target'].append(target_name)  
 
-    '''
     if params is not None and 'a' in params:
         table['name'].append('Orbital semi-major axis (in units of AU)')
         table['median'].append(str(params['a']))
@@ -235,6 +234,7 @@ def get_MCMC_table(sampler, params=None, tablefmt='html', target_name=None):
         if target_name:
             table['target'].append(target_name) 
 
+    '''
     if params is not None and 'incl' in params:
         table['name'].append('Orbital inclination (in units of degree)')
         table['median'].append(str(params['incl']))
